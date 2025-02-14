@@ -9,18 +9,19 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "Answers")
-public class Answer {
+@Table(name = "QuizResponses")
+public class QuizResponse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long aid;
+    private Long rid;
 
-    @Column(nullable = false)
-    private String text;
-    private boolean isCorrect;
+    private String answer;  // lưu câu trả lời cho một trong những loại câu hỏi: "MCQ", "True/False", "Short answer"
 
     // relationship
     @ManyToOne
     @JoinColumn(name = "qtid", nullable = false)
     private Question question;
+//    @ManyToOne
+//    @JoinColumn(name = "atid", nullable = false)
+//    private Attempt attempt;
 }
