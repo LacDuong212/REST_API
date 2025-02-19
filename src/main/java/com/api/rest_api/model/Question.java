@@ -23,10 +23,9 @@ public class Question {
     @Enumerated(EnumType.STRING)
     private QuestionType type;
 
-    // relationship
-//    @ManyToOne
-//    @JoinColumn(name = "qid", nullable = false)
-//    private Quiz quiz;
+    @ManyToOne
+    @JoinColumn(name = "qid", nullable = false)
+    private Quiz quiz;
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Answer> answers = new ArrayList<>();
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)

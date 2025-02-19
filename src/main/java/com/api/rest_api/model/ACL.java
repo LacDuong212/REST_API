@@ -1,6 +1,6 @@
 package com.api.rest_api.model;
 
-import com.api.rest_api.enums.AclPermission;
+import com.api.rest_api.enums.AclRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,5 +17,12 @@ public class ACL {
     private Long aclid;
 
     @Enumerated(EnumType.STRING)
-    AclPermission permission;
+    AclRole role;
+
+    @ManyToOne
+    @JoinColumn(name = "uid", nullable = false)
+    private Account account;
+    @ManyToOne
+    @JoinColumn(name = "qid", nullable = false)
+    private Quiz quiz;
 }

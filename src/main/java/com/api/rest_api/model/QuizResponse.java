@@ -15,13 +15,12 @@ public class QuizResponse {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long rid;
 
-    private String answer;  // lưu câu trả lời cho một trong những loại câu hỏi: "MCQ", "True/False", "Short answer"
+    private String answer;  // lưu câu trả lời cho một trong những loại câu hỏi: "MCQ", "True/False", "Short answer"; null = no answer
 
-    // relationship
     @ManyToOne
     @JoinColumn(name = "qtid", nullable = false)
     private Question question;
-//    @ManyToOne
-//    @JoinColumn(name = "atid", nullable = false)
-//    private Attempt attempt;
+    @ManyToOne
+    @JoinColumn(name = "atid", nullable = false)
+    private Attempt attempt;
 }

@@ -21,7 +21,6 @@ public class Topic {
     @Enumerated(EnumType.STRING)
     private QuizTopic topic;
 
-    // relationship
-//    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<Quiz> quizzes;
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Quiz> quizzes;
 }
