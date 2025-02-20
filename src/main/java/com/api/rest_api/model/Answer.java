@@ -19,7 +19,6 @@ public class Answer {
     private String text;
     private boolean isCorrect;
 
-    // relationship
     @ManyToOne
     @JoinColumn(name = "qtid", nullable = false)
     private Question question;

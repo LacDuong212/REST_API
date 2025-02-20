@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/quizs")
+@RequestMapping("/api/quizzes")
 public class QuizController {
     @Autowired
     private QuizService quizService;
@@ -22,5 +22,10 @@ public class QuizController {
     @GetMapping("/top10")
     public ResponseEntity<?> getTop10Quizzes() {
         return quizService.getTop10QuizzesByAttempts();
+    }
+
+    @GetMapping("/created-past-7days")
+    public ResponseEntity<?> getQuizzesCreatedPastWeek() {
+        return quizService.getQuizzesCreatedPastWeek();
     }
 }

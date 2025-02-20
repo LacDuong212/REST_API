@@ -15,13 +15,18 @@ public class QuizService {
     private QuizRepository quizRepository;
 
     public ResponseEntity<?> getQuizzesByTopicId(Long topicId) {
-        List<Quiz> quizzes = quizRepository.findByTopicId(topicId);
-        return quizzes.isEmpty() ? ResponseEntity.ok("Không có quiz nào cho topic này") : ResponseEntity.ok(quizzes);
+        List<Quiz> quizzes = quizRepository.findByTopic_Tid(topicId);
+        return quizzes.isEmpty() ? ResponseEntity.ok("Không có quiz nào cho topic này!") : ResponseEntity.ok(quizzes);
     }
 
     public ResponseEntity<?> getTop10QuizzesByAttempts() {
         List<Quiz> quizzesTop10 = quizRepository.findTop10ByMostAttempts(PageRequest.of(0, 10));
-        return quizzesTop10.isEmpty() ? ResponseEntity.ok("Không có quiz nào phổ biến") : ResponseEntity.ok(quizzesTop10);
+        return quizzesTop10.isEmpty() ? ResponseEntity.ok("Không có quiz nào phổ biến!") : ResponseEntity.ok(quizzesTop10);
+    }
+
+    public ResponseEntity<?> getQuizzesCreatedPastWeek() {
+        List<Quiz> quizzesPastWeek = quizRepository.findQuizzesCreatedPastWeek(PageRequest.of(0, 10));
+        return quizzesPastWeek.isEmpty() ? ResponseEntity.ok("Không tìm thấy quiz nào tạo trong tuần vừa rồi!") : ResponseEntity.ok(quizzesPastWeek);
     }
 
 }
