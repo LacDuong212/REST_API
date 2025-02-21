@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -25,7 +26,8 @@ public class QuizService {
     }
 
     public ResponseEntity<?> getQuizzesCreatedPastWeek() {
-        List<Quiz> quizzesPastWeek = quizRepository.findQuizzesCreatedPastWeek(PageRequest.of(0, 10));
+        LocalDate oneWeekAgo = LocalDate.now().minusWeeks(1);
+        List<Quiz> quizzesPastWeek = quizRepository.findQuizzesCreatedPastWeek(oneWeekAgo, PageRequest.of(0, 10));
         return quizzesPastWeek.isEmpty() ? ResponseEntity.ok("Không tìm thấy quiz nào tạo trong tuần vừa rồi!") : ResponseEntity.ok(quizzesPastWeek);
     }
 
