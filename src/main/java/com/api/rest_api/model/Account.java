@@ -27,8 +27,16 @@ public class Account {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column
+    private String userSettings;
+
+    @Transient
+    private int coins;
+
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ACL> aclRoles = new ArrayList<>();
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Attempt> attempts = new ArrayList<>();
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CoinHistory> coinHistories = new ArrayList<>();
 }

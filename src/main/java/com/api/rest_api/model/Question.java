@@ -20,8 +20,7 @@ public class Question {
     @Column(nullable = false)
     private String text;
 
-    @Enumerated(EnumType.STRING)
-    private QuestionType type;
+    private String type;
 
     @ManyToOne
     @JoinColumn(name = "qid", nullable = false)

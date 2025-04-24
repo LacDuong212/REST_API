@@ -18,8 +18,7 @@ public class Topic {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tid;
 
-    @Enumerated(EnumType.STRING)
-    private QuizTopic topic;
+    private String topic;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Quiz> quizzes;

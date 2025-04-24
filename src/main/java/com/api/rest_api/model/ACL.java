@@ -16,8 +16,7 @@ public class ACL {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long aclid;
 
-    @Enumerated(EnumType.STRING)
-    AclRole role;
+    private String role;
 
     @ManyToOne
     @JoinColumn(name = "uid", nullable = false)
