@@ -5,7 +5,7 @@ public final class QuizTopic {
     public static final String SCIENCE = "SCIENCE";
     public static final String HISTORY = "HISTORY";
     public static final String TECHNOLOGY = "TECHNOLOGY";
-    public static final String SPORTS = "SPORTS";
+    public static final String SPORT = "SPORT";
     public static final String ENTERTAINMENT = "ENTERTAINMENT";
     public static final String GEOGRAPHY = "GEOGRAPHY";
     public static final String MATHEMATICS = "MATHEMATICS";
@@ -16,5 +16,4 @@ public final class QuizTopic {
     public static final String ART = "ART";
     public static final String MUSIC = "MUSIC";
     public static final String HEALTH = "HEALTH";
-    public static final String MIXED = "MIXED";
 }

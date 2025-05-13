@@ -23,6 +23,7 @@ public class CoinHistory {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
+    @Column(length = 500)
     private String description;
 
     @PrePersist

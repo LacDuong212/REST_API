@@ -19,19 +19,19 @@ public class Quiz {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long qid;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String title;
 
-    @Column(nullable = false)
+    @Column(length = 500)
     private String description;
 
     @Column(nullable = false)
-    private String status;
+    private boolean isPublic;
 
     @Column(nullable = false)
     private Date createdDate;
 
-    private Integer duration;
+    private long duration;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ACL> aclRoles = new ArrayList<>();

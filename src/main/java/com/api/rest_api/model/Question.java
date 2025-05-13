@@ -18,7 +18,7 @@ public class Question {
     private Long qtid;
 
     @Column(nullable = false)
-    private String text;
+    private String question;
 
     private String type;
 

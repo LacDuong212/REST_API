@@ -15,6 +15,7 @@ public class QuizResponse {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long rid;
 
+    @Column(length = 500)
     private String answer;  // lưu câu trả lời cho một trong những loại câu hỏi: "MCQ", "True/False", "Short answer"; null = no answer
 
     @ManyToOne

@@ -15,7 +15,7 @@ public class Answer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long aid;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String text;
     private boolean isCorrect;
 

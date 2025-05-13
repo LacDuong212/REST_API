@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -41,5 +42,10 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
         return authService.resetPassword(request);
+    }
+
+    @GetMapping("/hello")
+    public ResponseEntity<?> hello() {
+        return ResponseEntity.ok("Quizflow said hello");
     }
 }
