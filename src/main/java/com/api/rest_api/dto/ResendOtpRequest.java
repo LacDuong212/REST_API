@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
+public class ResendOtpRequest {
     private String email;
-    private String fullname;
-    private String username;
-    private String password;
 }

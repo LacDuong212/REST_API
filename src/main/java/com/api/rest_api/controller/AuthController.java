@@ -20,6 +20,17 @@ public class AuthController {
         return authService.register(request);
     }
 
+    @PostMapping("/sign-up")
+    public ResponseEntity<?> registerAccount(@RequestBody RegisterRequest request) {
+        return authService.registerAccount(request);
+    }
+
+    // resend otp
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestBody ResendOtpRequest request) {
+        return authService.resendOtp(request);
+    }
+
     // Xác minh OTP
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest request) {

@@ -36,6 +36,13 @@ public class AuthService {
         return ResponseEntity.ok("Đăng ký thành công, vui lòng kiểm tra email để xác minh!");
     }
 
+    public ResponseEntity<?> resendOtp(ResendOtpRequest request) {
+        String otp = otpService.generateOtp(request.getEmail());
+        emailService.sendEmail(request.getEmail(), "Xác minh tài khoản", "OTP của bạn: " + otp);
+
+        return ResponseEntity.ok("Đã gữi mã OTP!");
+    }
+
     public ResponseEntity<?> verifyOtp(VerifyOtpRequest request) {
         if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
             return ResponseEntity.badRequest().body("OTP không hợp lệ!");
@@ -46,14 +53,24 @@ public class AuthService {
             return ResponseEntity.badRequest().body("Không tìm thấy thông tin đăng ký!");
         }
 
-        Account account = new Account();
-        account.setEmail(registerRequest.getEmail());
-        account.setPassword(registerRequest.getPassword());
-        accountRepository.save(account);
+        return ResponseEntity.ok("Xác minh tài khoản thành công!");
+    }
 
+    public ResponseEntity<?> registerAccount(RegisterRequest request) {
+        if (accountRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest().body("Email đã tồn tại!");
+        }
+
+        Account account = new Account();
+        account.setEmail(request.getEmail());
+        account.setFullname(request.getFullname());
+        account.setUsername(request.getUsername());
+        account.setPassword(request.getPassword());
+
+        accountRepository.save(account);
         tempAccounts.remove(request.getEmail());
 
-        return ResponseEntity.ok("Xác minh tài khoản thành công!");
+        return ResponseEntity.ok("Tạo tài khoản thành công!");
     }
 
     public ResponseEntity<?> login(LoginRequest request) {
