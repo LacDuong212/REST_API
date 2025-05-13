@@ -21,6 +21,8 @@ public class Account {
     @Column(nullable = false, unique = true)
     private String username;
 
+    private String fullname;
+
     @Column(nullable = false)
     private String password;
 
