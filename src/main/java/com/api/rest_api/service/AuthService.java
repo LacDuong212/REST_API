@@ -221,7 +221,7 @@ public class AuthService {
             return ResponseEntity.badRequest().body("Không tìm thấy tài khoản!");
         }
 
-        account.setPassword(request.getPassword());
+        account.setPassword(passwordEncoder.encode(request.getPassword()));
         accountRepository.save(account);
 
         return ResponseEntity.ok("Cập nhật mật khẩu thành công!");
