@@ -20,6 +20,6 @@ public class Topic {
 
     private String topic;
 
-    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Quiz> quizzes;
+//    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Quiz> quizzes;
 }

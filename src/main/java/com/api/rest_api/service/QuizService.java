@@ -15,10 +15,10 @@ public class QuizService {
     @Autowired
     private QuizRepository quizRepository;
 
-    public ResponseEntity<?> getQuizzesByTopicId(Long topicId) {
-        List<Quiz> quizzes = quizRepository.findByTopic_Tid(topicId);
-        return quizzes.isEmpty() ? ResponseEntity.ok("Không có quiz nào cho topic này!") : ResponseEntity.ok(quizzes);
-    }
+//    public ResponseEntity<?> getQuizzesByTopicId(Long topicId) {
+//        List<Quiz> quizzes = quizRepository.findByTopic_Tid(topicId);
+//        return quizzes.isEmpty() ? ResponseEntity.ok("Không có quiz nào cho topic này!") : ResponseEntity.ok(quizzes);
+//    }
 
     public ResponseEntity<?> getTop10QuizzesByAttempts() {
         List<Quiz> quizzesTop10 = quizRepository.findTop10ByMostAttempts(PageRequest.of(0, 10));

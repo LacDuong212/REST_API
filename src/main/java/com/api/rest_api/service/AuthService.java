@@ -5,10 +5,17 @@ import com.api.rest_api.model.Account;
 import com.api.rest_api.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -21,7 +28,12 @@ public class AuthService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
     private Map<String, RegisterRequest> tempAccounts = new HashMap<>();
+
+    private static final String UPLOAD_DIR = "D:/Uploads/";
 
     public ResponseEntity<?> register(RegisterRequest request) {
         if (accountRepository.existsByEmail(request.getEmail())) {
@@ -65,7 +77,7 @@ public class AuthService {
         account.setEmail(request.getEmail());
         account.setFullname(request.getFullname());
         account.setUsername(request.getUsername());
-        account.setPassword(request.getPassword());
+        account.setPassword(passwordEncoder.encode(request.getPassword()));
 
         accountRepository.save(account);
         tempAccounts.remove(request.getEmail());
@@ -74,11 +86,25 @@ public class AuthService {
     }
 
     public ResponseEntity<?> login(LoginRequest request) {
-        Account account = accountRepository.findByEmailAndPassword(request.getEmail(), request.getPassword());
-        if (account == null) {
+        Account account = accountRepository.findByEmail(request.getEmail());
+        if (account == null || !passwordEncoder.matches(request.getPassword(), account.getPassword())) {
             return ResponseEntity.badRequest().body("Email hoặc mật khẩu không đúng!");
         }
-        return ResponseEntity.ok("Đăng nhập thành công!");
+        // Tạo đối tượng DTO để chứa thông tin người dùng
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUid(account.getUid());
+        userResponse.setUsername(account.getUsername());
+        userResponse.setFullname(account.getFullname());
+        userResponse.setEmail(account.getEmail());
+        userResponse.setImage(account.getImage());
+        userResponse.setCoins(account.getCoins());
+
+        // Trả về thông tin người dùng cùng thông báo đăng nhập thành công
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Đăng nhập thành công!");
+        response.put("user", userResponse);
+
+        return ResponseEntity.ok(response);
     }
 
     public ResponseEntity<?> forgotPassword(ForgotPasswordRequest request) {
@@ -102,5 +128,85 @@ public class AuthService {
         accountRepository.save(account);
 
         return ResponseEntity.ok("Đặt lại mật khẩu thành công!");
+    }
+
+    // New method to get user by UID
+    public ResponseEntity<UserResponse> getUserByUid(Long uid) {
+        return accountRepository.findById(uid)
+                .map(account -> {
+                    UserResponse userResponse = new UserResponse();
+                    userResponse.setUid(account.getUid());
+                    userResponse.setUsername(account.getUsername());
+                    userResponse.setFullname(account.getFullname());
+                    userResponse.setEmail(account.getEmail());
+                    userResponse.setImage(account.getImage());
+                    userResponse.setCoins(account.getCoins());
+                    return ResponseEntity.ok(userResponse);
+                })
+                .orElseGet(() -> ResponseEntity.badRequest().body(null));
+    }
+
+    // Updated method to update profile using UID
+    public ResponseEntity<?> updateProfile(Long uid, String username, String fullname, String email, MultipartFile image) {
+        return accountRepository.findById(uid)
+                .map(account -> {
+                    // Validate inputs
+                    if (username == null || username.trim().isEmpty()) {
+                        return ResponseEntity.badRequest().body(new APIResponse("Username không được để trống!"));
+                    }
+                    if (fullname == null || fullname.trim().isEmpty()) {
+                        return ResponseEntity.badRequest().body(new APIResponse("Họ tên không được để trống!"));
+                    }
+                    if (email == null || email.trim().isEmpty()) {
+                        return ResponseEntity.badRequest().body(new APIResponse("Email không được để trống!"));
+                    }
+
+                    // Check for duplicate username or email
+                    if (!account.getUsername().equals(username) && accountRepository.existsByUsername(username)) {
+                        return ResponseEntity.badRequest().body(new APIResponse("Username đã tồn tại!"));
+                    }
+                    if (!account.getEmail().equals(email) && accountRepository.existsByEmail(email)) {
+                        return ResponseEntity.badRequest().body(new APIResponse("Email đã tồn tại!"));
+                    }
+
+                    // Update account details
+                    account.setUsername(username);
+                    account.setFullname(fullname);
+                    account.setEmail(email);
+
+                    // Handle image upload
+                    if (image != null && !image.isEmpty()) {
+                        try {
+                            // Generate unique filename
+                            String fileName = UUID.randomUUID().toString() + "_" + image.getOriginalFilename();
+                            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+                            Files.createDirectories(filePath.getParent());
+                            image.transferTo(filePath.toFile());
+
+                            // Store relative URL
+                            String imageUrl = "/Uploads/" + fileName;
+                            account.setImage(imageUrl);
+                        } catch (IOException e) {
+                            return ResponseEntity.badRequest().body(new APIResponse("Lỗi khi tải lên hình ảnh!"));
+                        }
+                    }
+
+                    accountRepository.save(account);
+                    // Return updated user data
+                    UserResponse userResponse = new UserResponse();
+                    userResponse.setUid(account.getUid());
+                    userResponse.setUsername(account.getUsername());
+                    userResponse.setFullname(account.getFullname());
+                    userResponse.setEmail(account.getEmail());
+                    userResponse.setImage(account.getImage());
+                    userResponse.setCoins(account.getCoins());
+
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("message", "Cập nhật hồ sơ thành công!");
+                    response.put("user", userResponse);
+
+                    return ResponseEntity.ok(response);
+                })
+                .orElseGet(() -> ResponseEntity.badRequest().body(new APIResponse("Tài khoản không tồn tại!")));
     }
 }

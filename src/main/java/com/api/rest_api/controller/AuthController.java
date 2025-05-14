@@ -5,6 +5,7 @@ import com.api.rest_api.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -58,5 +59,27 @@ public class AuthController {
     @GetMapping("/hello")
     public ResponseEntity<?> hello() {
         return ResponseEntity.ok("Quizflow said hello");
+    }
+
+    // New endpoint to get user by UID
+    @GetMapping("/users/{uid}")
+    public ResponseEntity<?> getUserByUid(@PathVariable Long uid) {
+        return authService.getUserByUid(uid);
+    }
+
+    // Updated endpoint to update profile using UID
+    @PostMapping(value = "/update-profile", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> updateProfile(
+            @RequestPart("uid") String uid,
+            @RequestPart("username") String username,
+            @RequestPart("fullname") String fullname,
+            @RequestPart("email") String email,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        try {
+            Long uidLong = Long.parseLong(uid);
+            return authService.updateProfile(uidLong, username, fullname, email, image);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(new APIResponse("Invalid UID format"));
+        }
     }
 }

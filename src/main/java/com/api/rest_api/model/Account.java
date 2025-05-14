@@ -30,7 +30,7 @@ public class Account {
     private String email;
 
     @Column
-    private String userSettings;
+    private String image;
 
     @Transient
     private int coins;

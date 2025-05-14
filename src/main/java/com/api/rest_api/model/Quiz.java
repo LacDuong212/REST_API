@@ -32,12 +32,13 @@ public class Quiz {
     private Date createdDate;
 
     private long duration;
+    private String topic;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ACL> aclRoles = new ArrayList<>();
-    @ManyToOne
-    @JoinColumn(name = "tid", nullable = false)
-    private Topic topic;
+//    @ManyToOne
+//    @JoinColumn(name = "tid", nullable = false)
+//    private Topic topic;
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions;
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
