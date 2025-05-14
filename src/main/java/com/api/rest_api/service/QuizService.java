@@ -1,5 +1,6 @@
 package com.api.rest_api.service;
 
+import com.api.rest_api.dto.QuizRequest;
 import com.api.rest_api.model.Quiz;
 import com.api.rest_api.repository.QuizRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,16 +10,17 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class QuizService {
     @Autowired
     private QuizRepository quizRepository;
 
-    public ResponseEntity<?> getQuizzesByTopicId(Long topicId) {
-        List<Quiz> quizzes = quizRepository.findByTopic_Tid(topicId);
-        return quizzes.isEmpty() ? ResponseEntity.ok("Không có quiz nào cho topic này!") : ResponseEntity.ok(quizzes);
-    }
+//    public ResponseEntity<?> getQuizzesByTopicId(Long topicId) {
+//        List<Quiz> quizzes = quizRepository.findByTopic_Tid(topicId);
+//        return quizzes.isEmpty() ? ResponseEntity.ok("Không có quiz nào cho topic này!") : ResponseEntity.ok(quizzes);
+//    }
 
     public ResponseEntity<?> getTop10QuizzesByAttempts() {
         List<Quiz> quizzesTop10 = quizRepository.findTop10ByMostAttempts(PageRequest.of(0, 10));
@@ -31,4 +33,38 @@ public class QuizService {
         return quizzesPastWeek.isEmpty() ? ResponseEntity.ok("Không tìm thấy quiz nào tạo trong tuần vừa rồi!") : ResponseEntity.ok(quizzesPastWeek);
     }
 
+    public ResponseEntity<?> saveQuiz(QuizRequest quizRequest) {
+        Quiz quiz;
+
+        if (quizRequest.getQid() == -1L) {
+            // Create new quiz with 6-digit ID
+            long sixDigitId;
+            do {
+                sixDigitId = 100000 + new Random().nextInt(900000);
+            } while (quizRepository.existsById(sixDigitId));
+
+            quiz = new Quiz();
+            quiz.setQid((long) sixDigitId);
+            quiz.setCreatedDate(LocalDate.now()); // set default
+        } else {
+            // Try to fetch the existing quiz
+            quiz = quizRepository.findById(quizRequest.getQid())
+                    .orElseGet(() -> {
+                        Quiz newQuiz = new Quiz();
+                        newQuiz.setQid(quizRequest.getQid());
+                        newQuiz.setCreatedDate(LocalDate.now());
+                        return newQuiz;
+                    });
+        }
+
+        // Apply common updates
+        quiz.setTitle(quizRequest.getTitle());
+        quiz.setDescription(quizRequest.getDescription());
+        quiz.setTopic(quizRequest.getTopic());
+        quiz.setPublic(quizRequest.isPublic());
+        quiz.setDuration(quizRequest.getDuration());
+
+        quizRepository.save(quiz);
+        return ResponseEntity.ok("Quiz saved successfully!");
+    }
 }

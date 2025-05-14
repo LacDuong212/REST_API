@@ -28,6 +28,10 @@ public class AuthService {
             return ResponseEntity.badRequest().body("Email đã tồn tại!");
         }
 
+        if (accountRepository.existsByUsername(request.getUsername())) {
+            return ResponseEntity.badRequest().body("Username đã tồn tại!");
+        }
+
         tempAccounts.put(request.getEmail(), request);
 
         String otp = otpService.generateOtp(request.getEmail());
@@ -48,10 +52,10 @@ public class AuthService {
             return ResponseEntity.badRequest().body("OTP không hợp lệ!");
         }
 
-        RegisterRequest registerRequest = tempAccounts.get(request.getEmail());
-        if (registerRequest == null) {
-            return ResponseEntity.badRequest().body("Không tìm thấy thông tin đăng ký!");
-        }
+//        RegisterRequest registerRequest = tempAccounts.get(request.getEmail());
+//        if (registerRequest == null) {
+//            return ResponseEntity.badRequest().body("Không tìm thấy thông tin đăng ký!");
+//        }
 
         return ResponseEntity.ok("Xác minh tài khoản thành công!");
     }
@@ -102,5 +106,19 @@ public class AuthService {
         accountRepository.save(account);
 
         return ResponseEntity.ok("Đặt lại mật khẩu thành công!");
+    }
+
+    public ResponseEntity<?> updatePassword(LoginRequest request) {
+        Account account = accountRepository.findByEmail(request.getEmail());
+
+        if (account == null) {
+            return ResponseEntity.badRequest().body("Không tìm thấy tài khoản!");
+        }
+
+        account.setPassword(request.getPassword());
+        accountRepository.save(account);
+
+        return ResponseEntity.ok("Cập nhật mật khẩu thành công!");
+
     }
 }

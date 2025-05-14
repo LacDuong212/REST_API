@@ -11,8 +11,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface QuizRepository extends JpaRepository<Quiz, Integer> {
-    List<Quiz> findByTopic_Tid(Long topicId);
+public interface QuizRepository extends JpaRepository<Quiz, Long> {
+    //List<Quiz> findByTopic_Tid(Long topicId);
 
     @Query("SELECT q FROM Quiz q JOIN Attempt a ON q.qid = a.quiz.qid GROUP BY q.qid ORDER BY COUNT(a.atid) DESC")
     List<Quiz> findTop10ByMostAttempts(Pageable pageable);
