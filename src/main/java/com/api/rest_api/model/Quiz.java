@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -16,7 +17,6 @@ import java.util.List;
 @Table(name = "quizs")
 public class Quiz {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long qid;
 
     @Column(nullable = false, length = 500)
@@ -29,7 +29,7 @@ public class Quiz {
     private boolean isPublic;
 
     @Column(nullable = false)
-    private Date createdDate;
+    private LocalDate createdDate;
 
     private long duration;
     private String topic;

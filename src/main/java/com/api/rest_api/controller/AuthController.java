@@ -50,6 +50,11 @@ public class AuthController {
         return authService.forgotPassword(request);
     }
 
+    @PostMapping("/update-password")
+    public ResponseEntity<?> updatePassword(@RequestBody LoginRequest request) {
+        return authService.updatePassword(request);
+    }
+
     // Đặt lại mật khẩu
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
