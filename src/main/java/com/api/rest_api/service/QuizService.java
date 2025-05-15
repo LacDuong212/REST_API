@@ -566,4 +566,35 @@ public class QuizService {
         System.out.println("Checking if lobby code exists: " + code);
         return lobbyRepository.findByCode(code).isPresent();
     }
+
+    public ResponseEntity<?> getPublicQuizzesByTopic(String topic) {
+        if (topic == null || topic.isEmpty()) {
+            return ResponseEntity.badRequest().body("Topic không hợp lệ!");
+        }
+
+        List<Quiz> quizzes = quizRepository.findQuizzesByTopic(topic);
+        if (quizzes.isEmpty()) {
+            return ResponseEntity.ok("Không tìm thấy quiz nào cho topic này!");
+        }
+
+        List<QuizModel> quizModels = quizzes.stream().map(QuizModel::new).collect(Collectors.toList());
+
+        return ResponseEntity.ok(quizModels);
+    }
+
+    public ResponseEntity<?> getPublicQuizzesByKeyword(String keyword) {
+        String search = keyword == null ? "" : keyword.trim();
+
+        List<Quiz> quizzes = quizRepository.searchPublicQuizzesByTitle(search);
+
+        if (quizzes.isEmpty()) {
+            return ResponseEntity.ok("Không tìm thấy quiz nào!");
+        }
+
+        List<QuizModel> quizModels = quizzes.stream()
+                .map(QuizModel::new)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(quizModels);
+    }
 }

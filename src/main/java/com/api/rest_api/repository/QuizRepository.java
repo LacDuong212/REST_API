@@ -24,4 +24,10 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     @Query("SELECT DISTINCT a.quiz FROM Attempt a WHERE a.account.uid = :uid")
     List<Quiz> findQuizzesAttemptedByUid(@Param("uid") Long uid);
+
+    @Query("SELECT q FROM Quiz q WHERE q.topic = :topic AND q.isPublic = true")
+    List<Quiz> findQuizzesByTopic(@Param("topic") String topic);
+
+    @Query("SELECT q FROM Quiz q WHERE q.isPublic = true AND LOWER(q.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Quiz> searchPublicQuizzesByTitle(@Param("keyword") String keyword);
 }

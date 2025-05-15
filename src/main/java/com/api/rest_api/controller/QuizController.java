@@ -79,4 +79,14 @@ public class QuizController {
     public ResponseEntity<?> getQuizzesAttemptedByAccount(@PathVariable Long uid) {
         return quizService.getQuizzesAttemptedByUid(uid);
     }
+
+    @GetMapping("/{topic}/public")
+    public ResponseEntity<?> getPublicQuizzesByTopic(@PathVariable String topic) {
+        return quizService.getPublicQuizzesByTopic(topic);
+    }
+
+    @GetMapping("/public/{keyword}")
+    public ResponseEntity<?> getPublicQuizzesByKeyword(@PathVariable String keyword) {
+        return quizService.getPublicQuizzesByKeyword(keyword);
+    }
 }

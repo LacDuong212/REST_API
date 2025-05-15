@@ -299,4 +299,20 @@ public class AuthService {
         
         return rankings.subList(0, Math.min(rankings.size(), 20)); // Limit to top 20
     }
+
+    public ResponseEntity<?>searchAccountsByUsername(String keyword) {
+        String search = keyword == null ? "" : keyword.trim();
+
+        List<Account> accounts = accountRepository.searchAccountsByUsername(search);
+
+        if (accounts.isEmpty()) {
+            return ResponseEntity.ok("Không tìm thấy người dùng nào!");
+        }
+
+        List<UserModel> userModels = accounts.stream()
+                .map(UserModel::new)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(userModels);
+    }
 }

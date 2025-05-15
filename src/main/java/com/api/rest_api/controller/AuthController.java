@@ -110,4 +110,9 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+    @GetMapping("/usrn/{keyword}")
+    public ResponseEntity<?> searchAccountsByUsername(@PathVariable String keyword) {
+        return authService.searchAccountsByUsername(keyword);
+    }
 }
