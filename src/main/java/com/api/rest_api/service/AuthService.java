@@ -16,9 +16,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.TemporalAdjusters;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -244,5 +251,52 @@ public class AuthService {
 
         return ResponseEntity.ok("Cập nhật mật khẩu thành công!");
 
+    }
+
+    public List<Map<String, Object>> getRankings(String period) {
+        LocalDate today = LocalDate.now();
+        Date startDate = null;
+
+        // Calculate start date based on period
+        if ("weekly".equals(period)) {
+            // Start of current week (Monday)
+            LocalDate monday = today.with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+            startDate = Date.from(monday.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            System.out.println("Weekly start date: " + startDate);
+        } else if ("monthly".equals(period)) {
+            // Start of current month
+            LocalDate firstDayOfMonth = today.withDayOfMonth(1);
+            startDate = Date.from(firstDayOfMonth.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            System.out.println("Monthly start date: " + startDate);
+        }
+        // For "all", startDate remains null
+
+        List<Object[]> results;
+        List<Map<String, Object>> rankings = new ArrayList<>();
+        
+        try {
+            if (startDate != null) {
+                results = coinHistoryRepository.findUserRankingsByPeriod(startDate);
+            } else {
+                results = coinHistoryRepository.findAllTimeUserRankings();
+            }
+            
+            for (Object[] result : results) {
+                if (result.length >= 5) {
+                    Map<String, Object> ranking = new HashMap<>();
+                    ranking.put("id", result[0]);
+                    ranking.put("username", result[1]);
+                    ranking.put("fullname", result[2]);
+                    ranking.put("image", result[3]);
+                    ranking.put("coins", result[4]);
+                    rankings.add(ranking);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching rankings: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return rankings.subList(0, Math.min(rankings.size(), 20)); // Limit to top 20
     }
 }

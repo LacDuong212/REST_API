@@ -3,9 +3,12 @@ package com.api.rest_api.controller;
 import com.api.rest_api.dto.*;
 import com.api.rest_api.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -92,5 +95,19 @@ public class AuthController {
     public ResponseEntity<Void> updateUserCoins(@PathVariable Long uid, @RequestBody CoinUpdateRequest request) {
         authService.updateUserCoins(uid, request.getCoins());
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/rankings")
+    public ResponseEntity<List<Map<String, Object>>> getRankings(@RequestParam(required = false, defaultValue = "all") String period) {
+        try {
+            System.out.println("Rankings requested with period: " + period);
+            List<Map<String, Object>> rankings = authService.getRankings(period);
+            System.out.println("Returning " + rankings.size() + " rankings");
+            return ResponseEntity.ok(rankings);
+        } catch (Exception e) {
+            System.err.println("Error in getRankings: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 }
