@@ -1,6 +1,6 @@
 package com.api.rest_api.controller;
 
-import com.api.rest_api.dto.QuizRequest;
+import com.api.rest_api.dto.QuizEditorRequest;
 import com.api.rest_api.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -32,8 +32,18 @@ public class QuizController {
         return null;
     }
 
+    @GetMapping("/{qid}/edit")
+    public ResponseEntity<?> getQuizEditorByQid(@PathVariable Long qid, @RequestParam Long uid) {
+        return quizService.getQuizEditorByQid(qid, uid);
+    }
+
     @PostMapping("/create")
-    public ResponseEntity<?> createQuiz(@RequestBody QuizRequest quizRequest) {
-        return quizService.saveQuiz(quizRequest);
+    public ResponseEntity<?> createQuiz(@RequestBody QuizEditorRequest quizEditorRequest) {
+        return quizService.createQuiz(quizEditorRequest);
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<?> updateQuiz(@RequestBody QuizEditorRequest quizEditorRequest) {
+        return quizService.updateQuiz(quizEditorRequest);
     }
 }
