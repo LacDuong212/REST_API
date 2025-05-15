@@ -82,7 +82,7 @@ public class QuizService {
     }
 
     // Tham gia lobby
-    public void joinLobby(JoinLobbyRequest request) {
+    public LobbyResponse joinLobby(JoinLobbyRequest request) {
         Lobby lobby = lobbyRepository.findByCode(request.getCode())
                 .orElseThrow(() -> new RuntimeException("Lobby not found"));
         Account account = accountRepository.findById(request.getUid())
@@ -100,6 +100,13 @@ public class QuizService {
 
         // Thông báo qua WebSocket
         messagingTemplate.convertAndSend("/topic/lobby/" + lobby.getLid(), getLobbyStatus(lobby.getLid()));
+        
+        // Return lobby response
+        LobbyResponse response = new LobbyResponse();
+        response.setLid(lobby.getLid());
+        response.setCode(lobby.getCode());
+        response.setQid(lobby.getQuiz().getQid());
+        return response;
     }
 
     // Get lobby info
@@ -410,5 +417,11 @@ public class QuizService {
 
         quizRepository.save(quiz);
         return ResponseEntity.ok("Quiz saved successfully!");
+    }
+
+    // Check if lobby code exists
+    public boolean checkLobbyCodeExists(String code) {
+        System.out.println("Checking if lobby code exists: " + code);
+        return lobbyRepository.findByCode(code).isPresent();
     }
 }
