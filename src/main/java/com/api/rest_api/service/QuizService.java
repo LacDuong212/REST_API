@@ -1,14 +1,9 @@
 package com.api.rest_api.service;
 
-import com.api.rest_api.dto.AnswerModel;
-import com.api.rest_api.dto.QuestionModel;
-import com.api.rest_api.dto.QuizEditorRequest;
-import com.api.rest_api.dto.QuizModel;
 import com.api.rest_api.model.*;
 import com.api.rest_api.repository.*;
 import com.api.rest_api.strings.AclRole;
 import com.api.rest_api.dto.*;
-import com.api.rest_api.dto.QuizResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -21,12 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 @Service
 public class QuizService {
