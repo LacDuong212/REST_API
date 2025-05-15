@@ -1,5 +1,7 @@
 package com.api.rest_api.controller;
 
+import com.api.rest_api.dto.*;
+import com.api.rest_api.model.QuizResponse;
 import com.api.rest_api.dto.QuizEditorRequest;
 import com.api.rest_api.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,28 @@ public class QuizController {
 //    public ResponseEntity<?> getQuizzesByTopic(@PathVariable Long topicId) {
 //        return quizService.getQuizzesByTopicId(topicId);
 //    }
+
+    @GetMapping("/{qid}")
+    public ResponseEntity<QuizResponseDTO> getQuizById(@PathVariable Long qid) {
+        return ResponseEntity.ok(quizService.getQuizById(qid));
+    }
+
+    @PostMapping("/attempts")
+    public ResponseEntity<AttemptResponse> createAttempt(@RequestBody AttemptRequest request) {
+        return ResponseEntity.ok(quizService.createAttempt(request));
+    }
+
+    @PostMapping("/quizResponses")
+    public ResponseEntity<Void> createQuizResponse(@RequestBody QuizResponseRequest request) {
+        quizService.createQuizResponse(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/coinHistory")
+    public ResponseEntity<Void> createCoinHistory(@RequestBody CoinHistoryRequest request) {
+        quizService.createCoinHistory(request);
+        return ResponseEntity.ok().build();
+    }
 
     @GetMapping("/top10")
     public ResponseEntity<?> getTop10Quizzes() {
