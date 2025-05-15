@@ -1,7 +1,6 @@
 package com.api.rest_api.controller;
 
 import com.api.rest_api.dto.*;
-import com.api.rest_api.model.QuizResponse;
 import com.api.rest_api.dto.QuizEditorRequest;
 import com.api.rest_api.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,5 +68,15 @@ public class QuizController {
     @PostMapping("/update")
     public ResponseEntity<?> updateQuiz(@RequestBody QuizEditorRequest quizEditorRequest) {
         return quizService.updateQuiz(quizEditorRequest);
+    }
+
+    @GetMapping("/{uid}/quizzes")
+    public ResponseEntity<?> getQuizzesCreatedByAccount(@PathVariable Long uid) {
+        return quizService.getQuizzesCreatedByUid(uid);
+    }
+
+    @GetMapping("/{uid}/attempted")
+    public ResponseEntity<?> getQuizzesAttemptedByAccount(@PathVariable Long uid) {
+        return quizService.getQuizzesAttemptedByUid(uid);
     }
 }

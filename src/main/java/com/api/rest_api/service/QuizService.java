@@ -403,7 +403,7 @@ public class QuizService {
         quiz.setTitle(quizModel.getTitle());
         quiz.setDescription(quizModel.getDescription());
         quiz.setTopic(quizModel.getTopic());
-        quiz.setPublic(quizModel.isMPublic());
+        quiz.setPublic(quizModel.isVisible());
         quiz.setDuration(quizModel.getDuration());
 
         List<Question> questionEntities = new ArrayList<>();
@@ -462,7 +462,7 @@ public class QuizService {
         quiz.setTitle(quizModel.getTitle());
         quiz.setDescription(quizModel.getDescription());
         quiz.setTopic(quizModel.getTopic());
-        quiz.setPublic(quizModel.isMPublic());
+        quiz.setPublic(quizModel.isVisible());
         quiz.setDuration(quizModel.getDuration());
 
         if (quiz.getQuestions() != null) {
@@ -522,5 +522,35 @@ public class QuizService {
         QuizEditorRequest response = new QuizEditorRequest(quizModel, questionModels);
 
         return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<?> getQuizzesCreatedByUid(Long uid) {
+        if (!accountRepository.existsByUid(uid)) {
+            return ResponseEntity.badRequest().body("Tài khoản không tồn tại!");
+        }
+
+        List<Quiz> quizzes = quizRepository.findQuizzesCreatedByUid(uid);
+        if (quizzes.isEmpty()) {
+            return ResponseEntity.ok("Không tìm thấy quiz nào được tạo bởi tài khoản này!");
+        }
+
+        List<QuizModel> quizModels = quizzes.stream().map(QuizModel::new).collect(Collectors.toList());
+
+        return ResponseEntity.ok(quizModels);
+    }
+
+    public ResponseEntity<?> getQuizzesAttemptedByUid(Long uid) {
+        if (!accountRepository.existsByUid(uid)) {
+            return ResponseEntity.badRequest().body("Tài khoản không tồn tại!");
+        }
+
+        List<Quiz> quizzes = quizRepository.findQuizzesAttemptedByUid(uid);
+        if (quizzes.isEmpty()) {
+            return ResponseEntity.ok("Không tìm thấy quiz nào đã được làm bởi tài khoản này!");
+        }
+
+        List<QuizModel> quizModels = quizzes.stream().map(QuizModel::new).collect(Collectors.toList());
+
+        return ResponseEntity.ok(quizModels);
     }
 }

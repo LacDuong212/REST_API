@@ -18,4 +18,10 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     List<Quiz> findTop10ByMostAttempts(Pageable pageable);
     @Query("SELECT q FROM Quiz q WHERE q.createdDate >= :oneWeekAgo")
     List<Quiz> findQuizzesCreatedPastWeek(@Param("oneWeekAgo") LocalDate oneWeekAgo, Pageable pageable);
+
+    @Query("SELECT q FROM Quiz q JOIN ACL a ON q.qid = a.quiz.qid WHERE a.account.uid = :uid AND a.role = 'OWNER'")
+    List<Quiz> findQuizzesCreatedByUid(@Param("uid") Long uid);
+
+    @Query("SELECT DISTINCT a.quiz FROM Attempt a WHERE a.account.uid = :uid")
+    List<Quiz> findQuizzesAttemptedByUid(@Param("uid") Long uid);
 }

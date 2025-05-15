@@ -13,7 +13,7 @@ public class QuizModel {
     private String title = "";
     private String description = "";
     private String topic = "";   // category
-    private boolean mPublic;
+    private boolean visible = true;
     private String createdDate;
     private int questionCount = 0;
     private long duration = 0;   // in seconds
@@ -52,11 +52,12 @@ public class QuizModel {
         this.title = quiz.getTitle();
         this.description = quiz.getDescription();
         this.topic = quiz.getTopic();
-        this.mPublic = quiz.isPublic();
+        this.visible = quiz.isPublic();
         this.createdDate = quiz.getCreatedDate().toString();
         this.questionCount = quiz.getQuestions().size();
         this.duration = quiz.getDuration();
-        this.uid = quiz.getAclRoles().getFirst().getAccount().getUid();
+        if (quiz.getAclRoles() != null && !quiz.getAclRoles().isEmpty())
+            this.uid = quiz.getAclRoles().getFirst().getAccount().getUid();
         this.attemptCount = quiz.getAttempts().size();
     }
 }
