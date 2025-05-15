@@ -22,9 +22,15 @@ public class LobbyController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<Void> joinLobby(@RequestBody JoinLobbyRequest request) {
-        quizService.joinLobby(request);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<LobbyResponse> joinLobby(@RequestBody JoinLobbyRequest request) {
+        LobbyResponse response = quizService.joinLobby(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/check/{code}")
+    public ResponseEntity<Boolean> checkLobbyCode(@PathVariable String code) {
+        boolean exists = quizService.checkLobbyCodeExists(code);
+        return ResponseEntity.ok(exists);
     }
 
     @GetMapping("/{lid}")
