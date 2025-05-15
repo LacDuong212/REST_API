@@ -87,4 +87,10 @@ public class AuthController {
             return ResponseEntity.badRequest().body(new APIResponse("Invalid UID format"));
         }
     }
+
+    @PutMapping("/{uid}/coins")
+    public ResponseEntity<Void> updateUserCoins(@PathVariable Long uid, @RequestBody CoinUpdateRequest request) {
+        authService.updateUserCoins(uid, request.getCoins());
+        return ResponseEntity.ok().build();
+    }
 }

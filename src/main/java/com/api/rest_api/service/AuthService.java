@@ -2,7 +2,9 @@ package com.api.rest_api.service;
 
 import com.api.rest_api.dto.*;
 import com.api.rest_api.model.Account;
+import com.api.rest_api.model.CoinHistory;
 import com.api.rest_api.repository.AccountRepository;
+import com.api.rest_api.repository.CoinHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -30,6 +33,9 @@ public class AuthService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CoinHistoryRepository coinHistoryRepository;
 
     private Map<String, RegisterRequest> tempAccounts = new HashMap<>();
 
@@ -123,14 +129,17 @@ public class AuthService {
     }
 
     public ResponseEntity<?> resetPassword(ResetPasswordRequest request) {
-        if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
-            return ResponseEntity.badRequest().body("OTP không hợp lệ!");
+        Account account = accountRepository.findByUid(request.getUid());
+        if (account == null) {
+            return ResponseEntity.badRequest().body("Tài khoản không tồn tại!");
         }
 
-        Account account = accountRepository.findByEmail(request.getEmail());
-        account.setPassword(request.getNewPassword());
-        accountRepository.save(account);
+        if (!passwordEncoder.matches(request.getOldPassword(), account.getPassword())) {
+            return ResponseEntity.badRequest().body("Mật khẩu chưa chính xác!");
+        }
 
+        account.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        accountRepository.save(account);
         return ResponseEntity.ok("Đặt lại mật khẩu thành công!");
     }
 
@@ -144,10 +153,21 @@ public class AuthService {
                     userResponse.setFullname(account.getFullname());
                     userResponse.setEmail(account.getEmail());
                     userResponse.setImage(account.getImage());
-                    userResponse.setCoins(account.getCoins());
+                    userResponse.setCoins(coinHistoryRepository.sumAmountByAccountUid(uid));
                     return ResponseEntity.ok(userResponse);
                 })
                 .orElseGet(() -> ResponseEntity.badRequest().body(null));
+    }
+
+    public void updateUserCoins(Long uid, Integer coins) {
+        Account account = accountRepository.findById(uid)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        CoinHistory history = new CoinHistory();
+        history.setAccount(account);
+        history.setAmount(coins);
+        history.setDescription("Coins updated via API");
+        history.setTimestamp(LocalDateTime.now());
+        coinHistoryRepository.save(history);
     }
 
     // Updated method to update profile using UID
