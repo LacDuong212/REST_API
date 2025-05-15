@@ -10,5 +10,6 @@ import java.util.List;
 public class QuizResponseDTO {
     private Long qid;
     private String title;
+    private long duration;
     private List<QuestionResponse> questions;
 }

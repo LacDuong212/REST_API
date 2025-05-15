@@ -7,6 +7,7 @@ import com.api.rest_api.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -35,13 +36,251 @@ public class QuizService {
     @Autowired
     private CoinHistoryRepository coinHistoryRepository;
 
+    @Autowired
+    private LobbyRepository lobbyRepository;
+
+    @Autowired
+    private LobbyParticipantRepository lobbyParticipantRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
+    
+    @Autowired
+    private AnswerRepository answerRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    // Tạo lobby
+    public LobbyResponse createLobby(LobbyRequest request) {
+        Quiz quiz = quizRepository.findById(request.getQid())
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+        Account creator = accountRepository.findById(request.getUid())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String code;
+        do {
+            code = String.format("%06d", new Random().nextInt(999999));
+        } while (lobbyRepository.findByCode(code).isPresent());
+
+        Lobby lobby = new Lobby();
+        lobby.setCode(code);
+        lobby.setQuiz(quiz);
+        lobby.setStatus("PENDING");
+        lobby = lobbyRepository.save(lobby);
+
+        LobbyParticipant participant = new LobbyParticipant();
+        participant.setLobby(lobby);
+        participant.setAccount(creator);
+        participant.setScore(0);
+        lobbyParticipantRepository.save(participant);
+
+        LobbyResponse response = new LobbyResponse();
+        response.setLid(lobby.getLid());
+        response.setCode(lobby.getCode());
+        return response;
+    }
+
+    // Tham gia lobby
+    public void joinLobby(JoinLobbyRequest request) {
+        Lobby lobby = lobbyRepository.findByCode(request.getCode())
+                .orElseThrow(() -> new RuntimeException("Lobby not found"));
+        Account account = accountRepository.findById(request.getUid())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (lobby.getStatus().equals("STARTED") || lobby.getStatus().equals("FINISHED")) {
+            throw new RuntimeException("Lobby is not accepting new players");
+        }
+
+        LobbyParticipant participant = new LobbyParticipant();
+        participant.setLobby(lobby);
+        participant.setAccount(account);
+        participant.setScore(0);
+        lobbyParticipantRepository.save(participant);
+
+        // Thông báo qua WebSocket
+        messagingTemplate.convertAndSend("/topic/lobby/" + lobby.getLid(), getLobbyStatus(lobby.getLid()));
+    }
+
+    // Get lobby info
+    public LobbyResponse getLobbyInfo(Long lid) {
+        Lobby lobby = lobbyRepository.findById(lid)
+                .orElseThrow(() -> new RuntimeException("Lobby not found"));
+        
+        LobbyResponse response = new LobbyResponse();
+        response.setLid(lobby.getLid());
+        response.setCode(lobby.getCode());
+        response.setQid(lobby.getQuiz().getQid());
+        return response;
+    }
+
+    // Bắt đầu game
+    public void startLobby(Long lid, Long uid) {
+        Lobby lobby = lobbyRepository.findById(lid)
+                .orElseThrow(() -> new RuntimeException("Lobby not found"));
+        Account account = accountRepository.findById(uid)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Kiểm tra quyền chủ phòng (giả định người tạo là chủ)
+        LobbyParticipant creator = lobbyParticipantRepository.findByLobbyLid(lid).stream()
+                .filter(p -> p.getAccount().getUid().equals(uid))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Not authorized"));
+
+        lobby.setStatus("STARTED");
+        lobby.setStartTime(LocalDateTime.now());
+        lobby.setCurrentQuestionIndex(0); // Bắt đầu từ câu hỏi đầu tiên
+        lobbyRepository.save(lobby);
+
+        // Gửi câu hỏi đầu tiên
+        sendNextQuestion(lid, 0);
+    }
+
+    // Xử lý câu trả lời
+    public void submitAnswer(QuizAnswerRequest request) {
+        System.out.println("Processing answer: lid=" + request.getLid() + ", uid=" + request.getUid() + 
+                          ", qtid=" + request.getQtid() + ", aid=" + request.getAid());
+        
+        Lobby lobby = lobbyRepository.findById(request.getLid())
+                .orElseThrow(() -> new RuntimeException("Lobby not found"));
+        System.out.println("Found lobby: " + lobby.getLid() + ", status=" + lobby.getStatus() + 
+                          ", currentQuestionIndex=" + lobby.getCurrentQuestionIndex());
+        
+        LobbyParticipant participant = lobbyParticipantRepository.findByLobbyLid(lobby.getLid()).stream()
+                .filter(p -> p.getAccount().getUid().equals(request.getUid()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Participant not found"));
+        System.out.println("Found participant: " + participant.getAccount().getUsername());
+
+        // Kiểm tra câu trả lời - Tải Quiz với các Questions trong cùng một transaction
+        Question question = null;
+        
+        // Thay vì sử dụng lazy-loaded questions từ lobby.getQuiz(), tải lại quiz với questions
+        Quiz quiz = quizRepository.findById(lobby.getQuiz().getQid())
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+        System.out.println("Quiz: " + quiz.getQid() + ", title=" + quiz.getTitle());
+        
+        // Tải câu hỏi và câu trả lời từ repository
+        question = questionRepository.findById(request.getQtid())
+                .orElseThrow(() -> new RuntimeException("Question not found"));
+        System.out.println("Found question: " + question.getQtid() + ", text=" + question.getQuestion());
+
+        boolean isCorrect = false;
+        if (question != null && request.getAid() != null) {
+            // Tải danh sách đáp án từ repository
+            List<Answer> answers = answerRepository.findByQuestion(question);
+            isCorrect = answers.stream()
+                    .filter(a -> a.getAid().equals(request.getAid()))
+                    .anyMatch(Answer::isCorrect);
+            System.out.println("Answer is correct: " + isCorrect);
+        }
+
+        if (isCorrect) {
+            participant.setScore(participant.getScore() + 10); // Cộng 10 điểm
+            lobbyParticipantRepository.save(participant);
+            System.out.println("Updated score for " + participant.getAccount().getUsername() + ": " + participant.getScore());
+        }
+
+        // Cập nhật bảng xếp hạng
+        LobbyStatus rankingStatus = getLobbyStatus(lobby.getLid());
+        messagingTemplate.convertAndSend("/topic/lobby/" + lobby.getLid(), rankingStatus);
+        System.out.println("Sent ranking update");
+
+        // Đếm số người đã trả lời câu hỏi hiện tại
+        int totalParticipants = lobbyParticipantRepository.findByLobbyLid(lobby.getLid()).size();
+        System.out.println("Total participants: " + totalParticipants);
+        
+        // Nếu tất cả người chơi đã trả lời hoặc đây là câu trả lời cuối cùng, chuyển đến câu hỏi tiếp theo
+        int currentIndex = lobby.getCurrentQuestionIndex();
+        
+        // Lấy tổng số câu hỏi từ repository
+        int totalQuestions = questionRepository.countByQuiz(quiz);
+        System.out.println("Current question index: " + currentIndex + ", total questions: " + totalQuestions);
+        
+        // Force chuyển câu hỏi
+        // Nếu còn câu hỏi tiếp theo
+        if (currentIndex < totalQuestions - 1) {
+            // Tăng chỉ số câu hỏi và lưu lại
+            currentIndex++;
+            lobby.setCurrentQuestionIndex(currentIndex);
+            lobbyRepository.save(lobby);
+            System.out.println("Moving to next question: " + currentIndex);
+            
+            // Gửi câu hỏi tiếp theo
+            sendNextQuestion(lobby.getLid(), currentIndex);
+        } else {
+            // Đã hết câu hỏi, kết thúc game
+            lobby.setStatus("FINISHED");
+            lobbyRepository.save(lobby);
+            System.out.println("Game finished");
+            
+            // Gửi thông báo kết thúc
+            LobbyStatus finalStatus = getLobbyStatus(lobby.getLid());
+            messagingTemplate.convertAndSend("/topic/lobby/" + lobby.getLid(), finalStatus);
+            System.out.println("Sent game finished notification");
+        }
+    }
+
+    private void sendNextQuestion(Long lid, int questionIndex) {
+        System.out.println("Sending next question for lobby " + lid + ", index: " + questionIndex);
+        
+        Lobby lobby = lobbyRepository.findById(lid)
+                .orElseThrow(() -> new RuntimeException("Lobby not found"));
+        System.out.println("Found lobby: " + lobby.getLid() + ", status: " + lobby.getStatus());
+        
+        // Lấy danh sách câu hỏi từ repository thay vì từ quiz
+        Quiz quiz = lobby.getQuiz();
+        List<Question> questions = questionRepository.findByQuiz(quiz);
+        System.out.println("Quiz has " + questions.size() + " questions");
+        
+        if (questionIndex >= 0 && questionIndex < questions.size()) {
+            Question nextQuestion = questions.get(questionIndex);
+            System.out.println("Next question: " + nextQuestion.getQtid() + ", " + nextQuestion.getQuestion());
+        }
+        
+        // Gửi câu hỏi với chỉ số cụ thể
+        LobbyStatus status = getLobbyStatus(lid);
+        status.setCurrentQuestionIndex(questionIndex);
+        status.setQid(lobby.getQuiz().getQid());
+        
+        System.out.println("Sending lobby status with question index: " + status.getCurrentQuestionIndex());
+        
+        // Gửi thông báo tới tất cả người chơi
+        messagingTemplate.convertAndSend("/topic/lobby/" + lobby.getLid(), status);
+        System.out.println("Status sent to /topic/lobby/" + lobby.getLid());
+    }
+
+    private LobbyStatus getLobbyStatus(Long lid) {
+        Lobby lobby = lobbyRepository.findById(lid)
+                .orElseThrow(() -> new RuntimeException("Lobby not found"));
+        List<LobbyParticipant> participants = lobbyParticipantRepository.findByLobbyLid(lid);
+        LobbyStatus status = new LobbyStatus();
+        status.setLid(lid);
+        status.setStatus(lobby.getStatus());
+        status.setQid(lobby.getQuiz().getQid());
+        status.setCurrentQuestionIndex(lobby.getCurrentQuestionIndex());
+        status.setParticipants(participants.stream().map(p -> {
+            ParticipantStatus ps = new ParticipantStatus();
+            ps.setUid(p.getAccount().getUid());
+            ps.setUsername(p.getAccount().getUsername());
+            ps.setScore(p.getScore());
+            return ps;
+        }).collect(Collectors.toList()));
+        return status;
+    }
+
     public QuizResponseDTO getQuizById(Long qid) {
         Quiz quiz = quizRepository.findById(qid)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
+        
+        // Lấy danh sách câu hỏi từ repository thay vì từ quiz
+        List<Question> questions = questionRepository.findByQuiz(quiz);
+        
         QuizResponseDTO response = new QuizResponseDTO();
         response.setQid(quiz.getQid());
         response.setTitle(quiz.getTitle());
-        response.setQuestions(getQuestionResponses(quiz.getQuestions()));
+        response.setDuration(quiz.getDuration());
+        response.setQuestions(getQuestionResponses(questions));
         return response;
     }
 

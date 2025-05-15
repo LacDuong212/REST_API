@@ -159,15 +159,13 @@ public class AuthService {
                 .orElseGet(() -> ResponseEntity.badRequest().body(null));
     }
 
+    // Phương thức này không cần thực hiện bất kỳ thao tác nào vì client sẽ gọi createCoinHistory trực tiếp
     public void updateUserCoins(Long uid, Integer coins) {
+        // Chỉ xác minh user tồn tại
         Account account = accountRepository.findById(uid)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        CoinHistory history = new CoinHistory();
-        history.setAccount(account);
-        history.setAmount(coins);
-        history.setDescription("Coins updated via API");
-        history.setTimestamp(LocalDateTime.now());
-        coinHistoryRepository.save(history);
+        // Không thực hiện thêm bất kỳ thao tác nào
+        // Số dư coins được tính bằng cách cộng tổng các bản ghi CoinHistory
     }
 
     // Updated method to update profile using UID
