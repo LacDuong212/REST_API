@@ -591,9 +591,7 @@ public class QuizService {
             return ResponseEntity.ok("Không tìm thấy quiz nào!");
         }
 
-        List<QuizModel> quizModels = quizzes.stream()
-                .map(QuizModel::new)
-                .collect(Collectors.toList());
+        List<QuizModel> quizModels = quizzes.stream().map(QuizModel::new).collect(Collectors.toList());
 
         return ResponseEntity.ok(quizModels);
     }

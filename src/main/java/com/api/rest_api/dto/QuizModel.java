@@ -1,5 +1,6 @@
 package com.api.rest_api.dto;
 
+import com.api.rest_api.model.Account;
 import com.api.rest_api.model.Quiz;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +18,10 @@ public class QuizModel {
     private String createdDate;
     private int questionCount = 0;
     private long duration = 0;   // in seconds
+
     private long uid = -1L;
+    private String username;
+    private String pfp;
 
     private int attemptCount = 0;
     private int questionType = 0;   //1:mcq, 2:true/false, 3:short answer, 4: mcq + true/false, 5: mcq + short answer, 6: true/false + short answer, 7: all
@@ -56,8 +60,12 @@ public class QuizModel {
         this.createdDate = quiz.getCreatedDate().toString();
         this.questionCount = quiz.getQuestions().size();
         this.duration = quiz.getDuration();
-        if (quiz.getAclRoles() != null && !quiz.getAclRoles().isEmpty())
-            this.uid = quiz.getAclRoles().getFirst().getAccount().getUid();
+        if (quiz.getAclRoles() != null && !quiz.getAclRoles().isEmpty()) {
+            Account a = quiz.getAclRoles().getFirst().getAccount();
+            this.uid = a.getUid();
+            this.username = a.getUsername();
+            this.pfp = a.getImage();
+        }
         this.attemptCount = quiz.getAttempts().size();
     }
 }
